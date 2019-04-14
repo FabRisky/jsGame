@@ -38,54 +38,34 @@ class Actor {
 	get top() {return this.pos.y};
 	get bottom() {return this.pos.y + this.size.y};
 
-  	isIntersect(obj) {
-  		if (this == obj) {
-  			return false};
+  	isIntersect(objectActor) {
+        if (!(objectActor instanceof Actor) || !objectActor) {
+            throw new Error('Объект не существует или не является объектом класса Actor');
+        }
 
-  		if ((obj.size.x < 0 && obj.size.y <0) ||
-  			((this.top >= obj.bottom) || 
-  			(this.right <= obj.left) || 
-  			(this.bottom <= obj.top) || 
-  			(this.left >= obj.right))) {
-  			return false;
-  		} else if(((this.top <= obj.top) || 
-  			(this.right >= obj.right) || 
-  			(this.bottom >= obj.bottom) || 
-  			(this.left <= obj.left))) {
-  			return true;
-  		}
-  		return true;
-  		console.log('нет таких условий пересечения');
-  	}
+        if (objectActor === this) {
+            return false;
+        }
+
+        return this.left < objectActor.right && this.top < objectActor.bottom && this.right > objectActor.left && this.bottom > objectActor.top;
+    }
+
   	act() {}
 }
 
 class Level {
-	constructor(grid, actors) {
-		var height = 0, width = 0, player = '';
-	  	if (grid instanceof Array) {
-	  	  height = grid.length;
-	  	  grid.forEach(function(elem) {
-	  	  	!elem ? width = 0 : elem instanceof Array ? width = elem.length > width ? elem.length : width : width = elem.length;
-	  	  });
-	  	}
-	  	if (actors instanceof Array) {
-	  		player = actors.find(function(elem) {
-	  			if(elem.type === 'player') {return elem}
-	  		});
-	  	}
-	  	this.grid = grid;
-	  	this.height = height;
-	  	this.width = width;
-	  	this.status = null;
-	  	this.finishDelay = 1;
-	  	this.actors = actors;
-	  	this.player = player;
-	}
+  constructor(grid = [], actors = []) {
+    this.grid = grid.slice();
+    this.height = grid.length;
+    this.width = Math.max(0, ...grid.map(item => item.length));
+    this.status = null;
+    this.finishDelay = 1;
+    this.actors = actors.slice();
+    this.player = this.actors.find(actor => actor.type === 'player');
+  }
+
 	isFinished() {
-		if (this.status != null && this.finishDelay < 0) {return true};
-		if (this.status != null && this.finishDelay > 0) {return false};
-		return false;
+		return this.status !== null && this.finishDelay < 0;
 	}
 	actorAt(obj) {
 		instanceofChecked(obj, Actor);
@@ -134,13 +114,7 @@ class Level {
 			}
 		}
 	noMoreActors(type) {
-		var find = 0;
-		if (!this.actors) {return true;}
-		this.actors.forEach(function(elem) {
-			if (elem.type == type) {find++};
-		});
-		if (find > 0) {return false;}
-		return true;
+		return this.actors.findIndex(el => el.type === type) === -1;
 	}
 	playerTouched(type) {
 		if (type == 'lava' || type == 'fireball') {return this.status = 'lost'};
@@ -373,3 +347,10 @@ const actorDict = {
 const parser = new LevelParser(actorDict);
 runGame(schemas, parser, DOMDisplay)
   .then(() => alert('Вы выиграли!'));
+
+
+  loadLevels()
+  .then((res) => {
+    runGame(JSON.parse(res), parser, DOMDisplay)
+.then(() =>alert('Вы выиграли!'))
+});
