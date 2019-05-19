@@ -11,6 +11,8 @@ function toggleMenu(event) {
 }
 
 function openLink(event) {
+  event.preventDefault();
+  event.stopPropagation();
   console.log(this.textContent);
 }
 
@@ -31,4 +33,4 @@ Array
 
 Array
   .from(document.querySelectorAll('a'))
-  .forEach(initLink);
+.forEach(initLink);
